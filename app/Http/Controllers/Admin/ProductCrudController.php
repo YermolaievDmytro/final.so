@@ -291,32 +291,34 @@ class ProductCrudController extends CrudController {
     public function show($id) {
         $base = parent::show($id);
 
-
         $client = new Client(['base_uri' => 'https://bank.gov.ua']);
         $request = $client->get('/NBUStatService/v1/statdirectory/exchange?json');
-        if ($request->getStatusCode() === 200) {
-            $body = $request->getBody();
+        if ($request->getStatusCode() !== 200) {
+//            \Prologue\Alerts\Facades\Alert::error('Bad gatevay');
+            return redirect('/admin');
         }
-        $content = $body->getContents();
-        $content_array = json_decode($content);
+        $body = $request->getBody();
+        $content_array = json_decode($body->getContents());
+        $USD = 0;
         foreach ($content_array as $key => $value) {
-            $value = (array) $value;
-            if ($value['cc'] == 'USD') {
-                $GLOBALS['USD'] = $value['rate'];
+            if ($value->cc == 'USD') {
+                $USD = $value->rate;
             }
         }
         foreach ($this->crud->columns as $key => $column) {
             $this->crud->removeColumn($column['name']);
         }
 
+
         $this->crud->addColumn([
             'name' => 'USD', // The db column name
             'label' => "USD", // Table column heading
             'type' => "closure",
-            'function' => function($entry) {
-                return $GLOBALS['USD'];
+            'function' => function($entry) use ($USD) {
+                return $USD;
             }
         ]);
+
         return $base;
     }
 
