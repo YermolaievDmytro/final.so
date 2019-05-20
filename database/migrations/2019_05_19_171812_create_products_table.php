@@ -18,10 +18,10 @@ class CreateProductsTable extends Migration
             $table->string('name');
             $table->decimal('price');
             $table->date('date_of_create');
-            $table->integer('weight')->unsigned();
-            $table->integer('height')->unsigned();
-            $table->integer('width')->unsigned();
-            $table->integer('length')->unsigned();
+            $table->float('weight')->unsigned();
+            $table->float('height')->unsigned();
+            $table->float('width')->unsigned();
+            $table->float('length')->unsigned();
             $table->integer('country_id')->unsigned()->index()->default('1'); //Предпологается, что первым значением буде "Неизвестно"
             $table->boolean('in_stock');
             $table->integer('min_age')->default('0');
