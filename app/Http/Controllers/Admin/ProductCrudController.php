@@ -7,6 +7,7 @@ use Backpack\CRUD\app\Http\Controllers\CrudController;
 use App\Http\Requests\ProductRequest as StoreRequest;
 use App\Http\Requests\ProductRequest as UpdateRequest;
 use Backpack\CRUD\CrudPanel;
+use GuzzleHttp\Client;
 
 /**
  * Class ProductCrudController
@@ -21,6 +22,7 @@ class ProductCrudController extends CrudController {
           | CrudPanel Basic Information
           |--------------------------------------------------------------------------
          */
+        $this->crud->allowAccess('show');
         $this->crud->setModel('App\Models\Product');
         $this->crud->setRoute(config('backpack.base.route_prefix') . '/product');
         $this->crud->setEntityNameStrings('product', 'products');
@@ -284,6 +286,38 @@ class ProductCrudController extends CrudController {
         // your additional operations after save here
         // use $this->data['entry'] or $this->crud->entry
         return $redirect_location;
+    }
+
+    public function show($id) {
+        $base = parent::show($id);
+
+
+        $client = new Client(['base_uri' => 'https://bank.gov.ua']);
+        $request = $client->get('/NBUStatService/v1/statdirectory/exchange?json');
+        if ($request->getStatusCode() === 200) {
+            $body = $request->getBody();
+        }
+        $content = $body->getContents();
+        $content_array = json_decode($content);
+        foreach ($content_array as $key => $value) {
+            $value = (array) $value;
+            if ($value['cc'] == 'USD') {
+                $GLOBALS['USD'] = $value['rate'];
+            }
+        }
+        foreach ($this->crud->columns as $key => $column) {
+            $this->crud->removeColumn($column['name']);
+        }
+
+        $this->crud->addColumn([
+            'name' => 'USD', // The db column name
+            'label' => "USD", // Table column heading
+            'type' => "closure",
+            'function' => function($entry) {
+                return $GLOBALS['USD'];
+            }
+        ]);
+        return $base;
     }
 
 }
