@@ -7,7 +7,6 @@ use Backpack\CRUD\app\Http\Controllers\CrudController;
 use App\Http\Requests\ProductRequest as StoreRequest;
 use App\Http\Requests\ProductRequest as UpdateRequest;
 use Backpack\CRUD\CrudPanel;
-use GuzzleHttp\Client;
 
 /**
  * Class ProductCrudController
@@ -26,6 +25,7 @@ class ProductCrudController extends CrudController {
         $this->crud->setModel('App\Models\Product');
         $this->crud->setRoute(config('backpack.base.route_prefix') . '/product');
         $this->crud->setEntityNameStrings('product', 'products');
+
 
         /*
           |--------------------------------------------------------------------------
@@ -270,6 +270,13 @@ class ProductCrudController extends CrudController {
                 'required' => 'required',
             ],
         ]);
+
+        //выбрать цвет
+        $this->crud->addField([
+            'name' => 'color',
+            'label' => 'Color',
+            'type' => 'color'
+        ]);
     }
 
     public function store(StoreRequest $request) {
@@ -291,20 +298,6 @@ class ProductCrudController extends CrudController {
     public function show($id) {
         $base = parent::show($id);
 
-        $client = new Client(['base_uri' => 'https://bank.gov.ua']);
-        $request = $client->get('/NBUStatService/v1/statdirectory/exchange?json');
-        if ($request->getStatusCode() !== 200) {
-//            \Prologue\Alerts\Facades\Alert::error('Bad gatevay');
-            return redirect('/admin');
-        }
-        $body = $request->getBody();
-        $content_array = json_decode($body->getContents());
-        $USD = 0;
-        foreach ($content_array as $key => $value) {
-            if ($value->cc == 'USD') {
-                $USD = $value->rate;
-            }
-        }
         foreach ($this->crud->columns as $key => $column) {
             $this->crud->removeColumn($column['name']);
         }
@@ -314,8 +307,8 @@ class ProductCrudController extends CrudController {
             'name' => 'USD', // The db column name
             'label' => "USD", // Table column heading
             'type' => "closure",
-            'function' => function($entry) use ($USD) {
-                return $USD;
+            'function' => function($entry) {
+                return $entry->USD();
             }
         ]);
 

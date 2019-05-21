@@ -21,7 +21,6 @@ class Manufacturer extends Model {
     // protected $guarded = ['id'];
     protected $fillable = [
         'name',
-        'products'
     ];
 
     public function products() {

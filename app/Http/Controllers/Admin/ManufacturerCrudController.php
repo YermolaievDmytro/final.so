@@ -25,6 +25,15 @@ class ManufacturerCrudController extends CrudController {
         $this->crud->setRoute(config('backpack.base.route_prefix') . '/manufacturer');
         $this->crud->setEntityNameStrings('manufacturer', 'manufacturers');
 
+        $this->crud->addColumn([
+            'label' => "Products", // Table column heading
+            'type' => "select_multiple",
+            'name' => 'products', // the method that defines the relationship in your Model
+            'entity' => 'products', // the method that defines the relationship in your Model
+            'attribute' => "name", // foreign key attribute that is shown to user
+            'model' => "App\Models\Product", // foreign key model
+        ]);
+
         /*
           |--------------------------------------------------------------------------
           | CrudPanel Configuration
